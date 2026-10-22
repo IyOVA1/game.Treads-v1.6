@@ -396,7 +396,8 @@ export function PlayerTank() {
         <ringGeometry args={[0.85, 1, 48]} />
         <meshBasicMaterial color="#6bcf8e" transparent opacity={0.35} side={THREE.DoubleSide} />
       </mesh>
-      <ChassisHull
+            <ChassisHull
+        chassis={chassis}
         trackMatL={trackMatL}
         trackMatR={trackMatR}
         trackTex={trackMap}
