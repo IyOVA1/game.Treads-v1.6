@@ -397,7 +397,6 @@ export function PlayerTank() {
         <meshBasicMaterial color="#6bcf8e" transparent opacity={0.35} side={THREE.DoubleSide} />
       </mesh>
       <ChassisHull
-        chassis={chassis}
         trackMatL={trackMatL}
         trackMatR={trackMatR}
         trackTex={trackMap}
@@ -405,7 +404,6 @@ export function PlayerTank() {
       />
       <WeaponMount
         weapon={weapon}
-        chassis={chassis}
         turretRef={turretRef}
         barrelRef={barrelRef}
         muzzleRef={muzzleRef}
