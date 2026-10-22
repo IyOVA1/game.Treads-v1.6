@@ -1,17 +1,16 @@
-import { useMemo, type RefObject, type MutableRefObject } from "react";
+import { type RefObject, type MutableRefObject } from "react";
 import * as THREE from "three";
-import { ChassisPart, WeaponPart, WeaponType } from "../../data/parts";
-import { makeTrackTexture } from "../../game/visuals";
+import { ChassisPart, WeaponPart } from "../../data/parts";
 
 const HULL: Record<string, string> = {
   chassis_wasp: "#556B4F",
-  chassis_crabber: "#4a5c42",
+  chassis_crabber: "#556B45",
   chassis_doomshock: "#5C5D4A",
   chassis_oblivion: "#424D45",
   chassis_morrow: "#3d4a3a",
 };
 
-/** Chassis hull only — no gun mount (weapon owns the holder) */
+/** Chassis only — basic silhouette from concept sheets + scrolling tracks */
 export function ChassisHull({
   chassis,
   trackMatL,
@@ -25,293 +24,443 @@ export function ChassisHull({
   trackTex: THREE.CanvasTexture;
   wheelRefs: MutableRefObject<(THREE.Mesh | null)[]>;
 }) {
-  const [w, h, l] = chassis.size;
-  const color = HULL[chassis.id] ?? "#556B4F";
-  const trackY = -h / 2 + 0.2;
   const id = chassis.id;
+  const color = HULL[id] ?? "#556B4F";
+  const dark = "#2a2e28";
 
-  // Shape variants from concept silhouettes
-  const lowProfile = id === "chassis_doomshock" || id === "chassis_oblivion";
-  const dualTrack = id === "chassis_crabber";
-  const longHull = id === "chassis_oblivion" || id === "chassis_morrow";
-  const scout = id === "chassis_wasp";
+  // --- Distinct body proportions (concept-inspired, not detailed replicas) ---
+  if (id === "chassis_wasp") {
+    // Small, light, short, raised rear, pointy nose
+    return (
+      <group>
+        <mesh position={[0, 0.15, -0.15]} castShadow>
+          <boxGeometry args={[1.6, 0.55, 2.4]} />
+          <meshStandardMaterial color={color} roughness={0.85} metalness={0.12} />
+        </mesh>
+        <mesh position={[0, 0.28, 0.85]} rotation={[-0.35, 0, 0]} castShadow>
+          <boxGeometry args={[1.45, 0.4, 1.0]} />
+          <meshStandardMaterial color={color} roughness={0.88} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 0.05, 1.35]} castShadow>
+          <boxGeometry args={[1.2, 0.25, 0.45]} />
+          <meshStandardMaterial color={dark} roughness={0.9} />
+        </mesh>
+        <TrackPair
+          trackMatL={trackMatL}
+          trackMatR={trackMatR}
+          trackTex={trackTex}
+          wheelRefs={wheelRefs}
+          halfWidth={1.05}
+          length={2.9}
+          height={0.55}
+          y={-0.15}
+          wheels={4}
+        />
+      </group>
+    );
+  }
 
-  const hullH = lowProfile ? h * 0.55 : h * 0.7;
-  const hullL = longHull ? l * 1.05 : scout ? l * 0.9 : l * 0.88;
-  const hullW = dualTrack ? w * 1.05 : w * 0.92;
+  if (id === "chassis_crabber") {
+    // Wide dual-track, boxy, tall, short overhang
+    return (
+      <group>
+        <mesh position={[0, 0.35, 0]} castShadow>
+          <boxGeometry args={[2.4, 0.9, 2.8]} />
+          <meshStandardMaterial color={color} roughness={0.85} metalness={0.12} />
+        </mesh>
+        <mesh position={[0, 0.55, 1.1]} rotation={[-0.12, 0, 0]} castShadow>
+          <boxGeometry args={[2.2, 0.55, 1.1]} />
+          <meshStandardMaterial color={color} roughness={0.88} />
+        </mesh>
+        <mesh position={[0, 0.75, -0.9]} castShadow>
+          <boxGeometry args={[1.8, 0.35, 0.9]} />
+          <meshStandardMaterial color={dark} roughness={0.9} />
+        </mesh>
+        <TrackPair
+          trackMatL={trackMatL}
+          trackMatR={trackMatR}
+          trackTex={trackTex}
+          wheelRefs={wheelRefs}
+          halfWidth={1.55}
+          length={3.2}
+          height={0.7}
+          y={-0.1}
+          wheels={6}
+          thick
+        />
+      </group>
+    );
+  }
 
+  if (id === "chassis_doomshock") {
+    // Very wide, low wedge, massive tracks, almost no superstructure
+    return (
+      <group>
+        <mesh position={[0, 0.12, 0.2]} rotation={[-0.22, 0, 0]} castShadow>
+          <boxGeometry args={[3.2, 0.45, 3.8]} />
+          <meshStandardMaterial color={color} roughness={0.88} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 0.28, -0.6]} castShadow>
+          <boxGeometry args={[2.4, 0.35, 1.8]} />
+          <meshStandardMaterial color={color} roughness={0.85} />
+        </mesh>
+        <mesh position={[0, 0.05, 1.6]} rotation={[-0.4, 0, 0]} castShadow>
+          <boxGeometry args={[2.8, 0.3, 1.2]} />
+          <meshStandardMaterial color={dark} roughness={0.9} />
+        </mesh>
+        <TrackPair
+          trackMatL={trackMatL}
+          trackMatR={trackMatR}
+          trackTex={trackTex}
+          wheelRefs={wheelRefs}
+          halfWidth={1.9}
+          length={4.2}
+          height={0.65}
+          y={-0.2}
+          wheels={7}
+          thick
+        />
+      </group>
+    );
+  }
+
+  if (id === "chassis_oblivion") {
+    // Long, angular, faceted mid-body, low
+    return (
+      <group>
+        <mesh position={[0, 0.25, -0.3]} castShadow>
+          <boxGeometry args={[2.0, 0.55, 3.6]} />
+          <meshStandardMaterial color={color} roughness={0.82} metalness={0.15} />
+        </mesh>
+        <mesh position={[0, 0.35, 1.0]} rotation={[-0.2, 0, 0]} castShadow>
+          <boxGeometry args={[1.85, 0.4, 1.4]} />
+          <meshStandardMaterial color={color} roughness={0.85} />
+        </mesh>
+        <mesh position={[0, 0.42, -1.4]} castShadow>
+          <boxGeometry args={[1.6, 0.35, 1.2]} />
+          <meshStandardMaterial color={dark} roughness={0.8} metalness={0.2} />
+        </mesh>
+        {/* side skirts / facets */}
+        {([-1, 1] as const).map((s) => (
+          <mesh key={s} position={[s * 1.05, 0.2, 0]} castShadow>
+            <boxGeometry args={[0.25, 0.45, 3.2]} />
+            <meshStandardMaterial color={color} roughness={0.88} />
+          </mesh>
+        ))}
+        <TrackPair
+          trackMatL={trackMatL}
+          trackMatR={trackMatR}
+          trackTex={trackTex}
+          wheelRefs={wheelRefs}
+          halfWidth={1.25}
+          length={3.8}
+          height={0.5}
+          y={-0.15}
+          wheels={6}
+        />
+      </group>
+    );
+  }
+
+  if (id === "chassis_morrow") {
+    // Boxy support van on tracks + white cross
+    return (
+      <group>
+        <mesh position={[0, 0.55, -0.1]} castShadow>
+          <boxGeometry args={[2.1, 1.1, 3.0]} />
+          <meshStandardMaterial color={color} roughness={0.85} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 0.35, 1.35]} rotation={[-0.1, 0, 0]} castShadow>
+          <boxGeometry args={[1.9, 0.7, 0.9]} />
+          <meshStandardMaterial color={color} roughness={0.88} />
+        </mesh>
+        {/* Medical cross */}
+        <mesh position={[0.55, 0.7, 0.2]} castShadow>
+          <boxGeometry args={[0.55, 0.08, 0.18]} />
+          <meshStandardMaterial color="#e8e4d4" />
+        </mesh>
+        <mesh position={[0.55, 0.7, 0.2]} castShadow>
+          <boxGeometry args={[0.18, 0.08, 0.55]} />
+          <meshStandardMaterial color="#e8e4d4" />
+        </mesh>
+        <TrackPair
+          trackMatL={trackMatL}
+          trackMatR={trackMatR}
+          trackTex={trackTex}
+          wheelRefs={wheelRefs}
+          halfWidth={1.3}
+          length={3.3}
+          height={0.55}
+          y={-0.12}
+          wheels={5}
+        />
+      </group>
+    );
+  }
+
+  // fallback
   return (
     <group>
-      {/* Lower sponson */}
-      <mesh position={[0, -h * 0.1, 0]} castShadow receiveShadow>
-        <boxGeometry args={[w * (dualTrack ? 1.15 : 1.05), h * 0.5, l * 0.98]} />
-        <meshStandardMaterial color={color} metalness={0.15} roughness={0.88} />
+      <mesh castShadow>
+        <boxGeometry args={[2.2, 0.8, 3.2]} />
+        <meshStandardMaterial color={color} roughness={0.85} />
       </mesh>
-      {/* Main hull */}
-      <mesh position={[0, lowProfile ? h * 0.02 : h * 0.08, longHull ? -0.05 : 0]} castShadow receiveShadow>
-        <boxGeometry args={[hullW, hullH, hullL]} />
-        <meshStandardMaterial color={color} metalness={0.18} roughness={0.82} />
-      </mesh>
-      {/* Glacis / nose */}
-      <mesh
-        position={[0, h * (lowProfile ? 0.12 : 0.2), l * (scout ? 0.32 : 0.28)]}
-        rotation={[lowProfile ? -0.28 : -0.16, 0, 0]}
-        castShadow
-      >
-        <boxGeometry args={[hullW * 0.92, h * 0.28, l * (lowProfile ? 0.38 : 0.28)]} />
-        <meshStandardMaterial color={color} metalness={0.12} roughness={0.9} />
-      </mesh>
-      {/* Morrow med cross hint */}
-      {id === "chassis_morrow" && (
-        <mesh position={[0, h * 0.35, -l * 0.1]} castShadow>
-          <boxGeometry args={[0.5, 0.08, 0.5]} />
-          <meshStandardMaterial color="#e8e4d4" metalness={0.1} roughness={0.7} />
-        </mesh>
-      )}
-      {/* Oblivion vents */}
-      {id === "chassis_oblivion" && (
-        <mesh position={[0, h * 0.28, -l * 0.15]} castShadow>
-          <boxGeometry args={[0.9, 0.12, 0.55]} />
-          <meshStandardMaterial color="#2a2f2a" metalness={0.3} roughness={0.6} />
-        </mesh>
-      )}
-
-      {/* Tracks */}
-      {([-1, 1] as const).map((side, si) => (
-        <group
-          key={side}
-          position={[side * (w / 2 + (dualTrack ? 0.22 : 0.16)), trackY, 0]}
-        >
-          <mesh castShadow receiveShadow>
-            <boxGeometry args={[dualTrack ? 0.5 : 0.42, 0.52, l * 0.98]} />
-            <meshStandardMaterial
-              ref={si === 0 ? trackMatL : trackMatR}
-              map={trackTex}
-              color="#b0b0b0"
-              metalness={0.12}
-              roughness={0.94}
-            />
-          </mesh>
-          <mesh position={[side * -0.12, 0.02, 0]}>
-            <boxGeometry args={[0.2, 0.38, l * 0.9]} />
-            <meshStandardMaterial color="#1a1c18" roughness={0.95} />
-          </mesh>
-          {Array.from({ length: dualTrack ? 6 : 5 }, (_, i) => (
-            <mesh
-              key={i}
-              ref={(el) => {
-                wheelRefs.current[si * 6 + i] = el;
-              }}
-              position={[
-                side * 0.08,
-                -0.08,
-                -l * 0.38 + i * ((l * 0.76) / (dualTrack ? 5 : 4)),
-              ]}
-              rotation={[0, 0, Math.PI / 2]}
-              castShadow
-            >
-              <cylinderGeometry args={[0.13, 0.13, 0.15, 10]} />
-              <meshStandardMaterial color="#3a3c36" metalness={0.35} roughness={0.75} />
-            </mesh>
-          ))}
-        </group>
-      ))}
+      <TrackPair
+        trackMatL={trackMatL}
+        trackMatR={trackMatR}
+        trackTex={trackTex}
+        wheelRefs={wheelRefs}
+        halfWidth={1.3}
+        length={3.2}
+        height={0.5}
+        y={-0.15}
+        wheels={5}
+      />
     </group>
   );
 }
 
-function weaponFamily(w: WeaponPart): "assault" | "missile" | "sniper" | "mortar" | "other" {
+function TrackPair({
+  trackMatL,
+  trackMatR,
+  trackTex,
+  wheelRefs,
+  halfWidth,
+  length,
+  height,
+  y,
+  wheels,
+  thick,
+}: {
+  trackMatL: RefObject<THREE.MeshStandardMaterial | null>;
+  trackMatR: RefObject<THREE.MeshStandardMaterial | null>;
+  trackTex: THREE.CanvasTexture;
+  wheelRefs: MutableRefObject<(THREE.Mesh | null)[]>;
+  halfWidth: number;
+  length: number;
+  height: number;
+  y: number;
+  wheels: number;
+  thick?: boolean;
+}) {
+  const tw = thick ? 0.55 : 0.4;
+  return (
+    <>
+      {([-1, 1] as const).map((side, si) => (
+        <group key={side} position={[side * halfWidth, y, 0]}>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[tw, height, length]} />
+            <meshStandardMaterial
+              ref={si === 0 ? trackMatL : trackMatR}
+              map={trackTex}
+              color="#c8c8c8"
+              roughness={0.95}
+              metalness={0.08}
+            />
+          </mesh>
+          {/* inner well */}
+          <mesh position={[side * -0.12, 0.05, 0]}>
+            <boxGeometry args={[tw * 0.45, height * 0.7, length * 0.9]} />
+            <meshStandardMaterial color="#141614" roughness={1} />
+          </mesh>
+          {Array.from({ length: wheels }, (_, i) => {
+            const z = -length * 0.4 + (i * (length * 0.8)) / Math.max(1, wheels - 1);
+            return (
+              <mesh
+                key={i}
+                ref={(el) => {
+                  wheelRefs.current[si * 10 + i] = el;
+                }}
+                position={[side * 0.05, -height * 0.15, z]}
+                rotation={[0, 0, Math.PI / 2]}
+                castShadow
+              >
+                <cylinderGeometry args={[height * 0.28, height * 0.28, tw * 0.5, 10]} />
+                <meshStandardMaterial color="#2a2c28" roughness={0.8} metalness={0.3} />
+              </mesh>
+            );
+          })}
+        </group>
+      ))}
+    </>
+  );
+}
+
+function family(w: WeaponPart): "assault" | "missile" | "sniper" | "mortar" | "cannon" {
   if (w.weaponType === "mortar") return "mortar";
-  if (w.id === "weapon_craterfall" || w.id.includes("missile")) return "missile";
+  if (w.id === "weapon_craterfall") return "missile";
   if (w.weaponType === "assault") return "assault";
   if (
     w.id === "weapon_ionthread" ||
     w.id === "weapon_starweft" ||
     w.id === "weapon_stonebreaker" ||
-    (w.weaponType === "plasma" && w.range >= 150)
+    (w.weaponType === "plasma" && (w.range ?? 0) >= 140)
   )
     return "sniper";
-  return "other";
+  return "cannon";
 }
 
-/** Turret ring + gun unique to weapon (not part of chassis) */
+/**
+ * Weapon owns the turret holder + barrel.
+ * Chassis has no cylindrical gun ring.
+ */
 export function WeaponMount({
   weapon,
-  chassis,
   turretRef,
   barrelRef,
   muzzleRef,
 }: {
   weapon: WeaponPart;
-  chassis: ChassisPart;
+  chassis?: ChassisPart;
   turretRef: RefObject<THREE.Group | null>;
   barrelRef: RefObject<THREE.Mesh | null>;
   muzzleRef: RefObject<THREE.Object3D | null>;
 }) {
-  const [w, h, l] = chassis.size;
-  const fam = weaponFamily(weapon);
-  const mountY = h / 2 + 0.18;
-
-  const holderColor = "#4a5344";
-  const gunColor = "#2e342e";
+  const fam = family(weapon);
+  const steel = "#3a4038";
+  const gun = "#1e221e";
 
   if (fam === "assault") {
+    // Dual cuboid barrels from cuboid holder, joined by cylinder muzzle
     return (
-      <group ref={turretRef} position={[0, mountY, -0.05]}>
-        {/* Cuboidal turret holder */}
+      <group ref={turretRef} position={[0, 0.75, 0]}>
         <mesh castShadow>
-          <boxGeometry args={[0.95, 0.42, 0.95]} />
-          <meshStandardMaterial color={holderColor} metalness={0.25} roughness={0.7} />
+          <boxGeometry args={[0.9, 0.45, 0.9]} />
+          <meshStandardMaterial color={steel} roughness={0.7} metalness={0.25} />
         </mesh>
-        {/* Dual cuboidal barrels */}
-        {([-1, 1] as const).map((side) => (
+        {([-1, 1] as const).map((s) => (
           <mesh
-            key={side}
-            position={[side * 0.18, 0.06, -l * 0.28]}
-            rotation={[Math.PI / 2, 0, 0]}
+            key={s}
+            position={[s * 0.2, 0.05, -0.85]}
             castShadow
           >
-            <boxGeometry args={[0.12, l * 0.42, 0.12]} />
-            <meshStandardMaterial color={gunColor} metalness={0.4} roughness={0.5} />
+            <boxGeometry args={[0.14, 0.14, 1.5]} />
+            <meshStandardMaterial color={gun} roughness={0.5} metalness={0.4} />
           </mesh>
         ))}
-        {/* Joining cylinder / muzzle */}
         <mesh
           ref={barrelRef}
-          position={[0, 0.06, -l * 0.48]}
+          position={[0, 0.05, -1.65]}
           rotation={[Math.PI / 2, 0, 0]}
           castShadow
         >
-          <cylinderGeometry args={[0.1, 0.12, 0.28, 10]} />
-          <meshStandardMaterial color="#1a1e1a" metalness={0.5} roughness={0.45} />
+          <cylinderGeometry args={[0.12, 0.14, 0.35, 12]} />
+          <meshStandardMaterial color="#111" roughness={0.4} metalness={0.5} />
         </mesh>
-        <object3D ref={muzzleRef} position={[0, 0.06, -l * 0.62]} />
+        <object3D ref={muzzleRef} position={[0, 0.05, -1.9]} />
       </group>
     );
   }
 
   if (fam === "missile") {
+    // Large holder + elongated octagon pod
     return (
-      <group ref={turretRef} position={[0, mountY, -0.05]}>
-        {/* Larger holder */}
+      <group ref={turretRef} position={[0, 0.8, 0]}>
         <mesh castShadow>
-          <boxGeometry args={[1.25, 0.5, 1.15]} />
-          <meshStandardMaterial color={holderColor} metalness={0.2} roughness={0.75} />
+          <boxGeometry args={[1.35, 0.55, 1.2]} />
+          <meshStandardMaterial color={steel} roughness={0.75} metalness={0.2} />
         </mesh>
-        {/* Irregular octagon pod (elongated front-back) */}
-        <mesh position={[0, 0.15, -0.35]} castShadow>
-          <cylinderGeometry args={[0.55, 0.55, 0.35, 8]} />
-          <meshStandardMaterial color="#3a4038" metalness={0.3} roughness={0.65} />
+        <mesh position={[0, 0.2, -0.55]} scale={[1.3, 0.9, 1.6]} castShadow>
+          <cylinderGeometry args={[0.5, 0.5, 0.5, 8]} />
+          <meshStandardMaterial color="#2f342f" roughness={0.65} metalness={0.3} />
         </mesh>
-        <mesh
-          ref={barrelRef}
-          position={[0, 0.15, -0.75]}
-          scale={[1.15, 1, 1.4]}
-          castShadow
-        >
-          <cylinderGeometry args={[0.4, 0.4, 0.45, 8]} />
-          <meshStandardMaterial color="#2a2e28" metalness={0.35} roughness={0.6} />
+        <mesh ref={barrelRef} position={[0, 0.2, -1.15]} scale={[1.15, 0.85, 1]} castShadow>
+          <cylinderGeometry args={[0.42, 0.42, 0.55, 8]} />
+          <meshStandardMaterial color={gun} roughness={0.6} metalness={0.35} />
         </mesh>
-        {/* Tube tips */}
-        {([-0.2, 0.2] as const).map((x, i) =>
+        {([-0.22, 0.22] as const).flatMap((x, i) =>
           ([-0.15, 0.15] as const).map((y, j) => (
-            <mesh key={`${i}-${j}`} position={[x, 0.15 + y * 0.3, -1.05]} castShadow>
-              <cylinderGeometry args={[0.06, 0.07, 0.35, 6]} />
-              <meshStandardMaterial color="#1a1a18" />
+            <mesh key={`${i}-${j}`} position={[x, 0.2 + y, -1.5]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.07, 0.08, 0.4, 6]} />
+              <meshStandardMaterial color="#151515" />
             </mesh>
           ))
         )}
-        <object3D ref={muzzleRef} position={[0, 0.15, -1.25]} />
+        <object3D ref={muzzleRef} position={[0, 0.2, -1.75]} />
       </group>
     );
   }
 
   if (fam === "sniper") {
-    const len = l * 0.85;
+    // Long single barrel
     return (
-      <group ref={turretRef} position={[0, mountY, -0.05]}>
+      <group ref={turretRef} position={[0, 0.75, 0]}>
         <mesh castShadow>
-          <boxGeometry args={[0.85, 0.4, 1.0]} />
-          <meshStandardMaterial color={holderColor} metalness={0.25} roughness={0.7} />
+          <boxGeometry args={[0.8, 0.4, 1.0]} />
+          <meshStandardMaterial color={steel} roughness={0.7} metalness={0.25} />
         </mesh>
-        <mesh position={[0, 0.12, 0.15]} castShadow>
-          <boxGeometry args={[0.35, 0.2, 0.4]} />
+        <mesh position={[0, 0.15, 0.2]} castShadow>
+          <boxGeometry args={[0.35, 0.22, 0.45]} />
           <meshStandardMaterial color="#5a6352" />
         </mesh>
         <mesh
           ref={barrelRef}
-          position={[0, 0.05, -len * 0.45]}
+          position={[0, 0.05, -1.6]}
           rotation={[Math.PI / 2, 0, 0]}
           castShadow
         >
-          <cylinderGeometry args={[0.07, 0.1, len, 10]} />
-          <meshStandardMaterial color={gunColor} metalness={0.5} roughness={0.4} />
+          <cylinderGeometry args={[0.06, 0.09, 2.8, 12]} />
+          <meshStandardMaterial color={gun} roughness={0.4} metalness={0.5} />
         </mesh>
-        <mesh position={[0, 0.05, -len * 0.85]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.11, 0.11, 0.2, 8]} />
-          <meshStandardMaterial color="#1a1e1a" />
+        <mesh position={[0, 0.05, -3.0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.1, 0.1, 0.25, 8]} />
+          <meshStandardMaterial color="#111" />
         </mesh>
-        <object3D ref={muzzleRef} position={[0, 0.05, -len * 0.95]} />
+        <object3D ref={muzzleRef} position={[0, 0.05, -3.2]} />
       </group>
     );
   }
 
   if (fam === "mortar") {
+    // Artillery rack — tubes angled up
     return (
-      <group ref={turretRef} position={[0, mountY, 0]}>
-        {/* Artillery rack base */}
+      <group ref={turretRef} position={[0, 0.7, 0.1]}>
         <mesh castShadow>
-          <boxGeometry args={[1.3, 0.35, 1.1]} />
-          <meshStandardMaterial color={holderColor} metalness={0.2} roughness={0.8} />
+          <boxGeometry args={[1.4, 0.35, 1.2]} />
+          <meshStandardMaterial color={steel} roughness={0.8} metalness={0.2} />
         </mesh>
-        {/* Elevated rack */}
-        <mesh position={[0, 0.35, 0.1]} rotation={[-0.4, 0, 0]} castShadow>
-          <boxGeometry args={[1.1, 0.2, 0.9]} />
+        <mesh position={[0, 0.35, 0.15]} rotation={[-0.45, 0, 0]} castShadow>
+          <boxGeometry args={[1.2, 0.22, 1.0]} />
           <meshStandardMaterial color="#3a4038" />
         </mesh>
-        {/* Tube cluster */}
-        {([-0.35, 0, 0.35] as const).map((x, i) => (
+        {([-0.4, 0, 0.4] as const).map((x, i) => (
           <mesh
             key={i}
             ref={i === 1 ? barrelRef : undefined}
-            position={[x, 0.55, -0.15]}
-            rotation={[-0.85, 0, 0]}
+            position={[x, 0.65, -0.2]}
+            rotation={[-1.0, 0, 0]}
             castShadow
           >
-            <cylinderGeometry args={[0.1, 0.12, 1.1, 8]} />
-            <meshStandardMaterial color={gunColor} metalness={0.4} roughness={0.5} />
+            <cylinderGeometry args={[0.11, 0.13, 1.4, 10]} />
+            <meshStandardMaterial color={gun} roughness={0.5} metalness={0.4} />
           </mesh>
         ))}
-        <object3D ref={muzzleRef} position={[0, 1.05, -0.75]} />
+        <object3D ref={muzzleRef} position={[0, 1.25, -0.95]} />
       </group>
     );
   }
 
-  // Default cannon-style
+  // Default cannon — single stout barrel + box holder
   return (
-    <group ref={turretRef} position={[0, mountY, -0.05]}>
+    <group ref={turretRef} position={[0, 0.75, 0]}>
       <mesh castShadow>
-        <boxGeometry args={[1.1, 0.48, 1.2]} />
-        <meshStandardMaterial color={holderColor} metalness={0.22} roughness={0.72} />
+        <boxGeometry args={[1.15, 0.5, 1.25]} />
+        <meshStandardMaterial color={steel} roughness={0.72} metalness={0.22} />
       </mesh>
-      <mesh position={[0, 0.06, -0.5]} castShadow>
-        <boxGeometry args={[0.5, 0.36, 0.3]} />
+      <mesh position={[0, 0.05, -0.55]} castShadow>
+        <boxGeometry args={[0.55, 0.4, 0.35]} />
         <meshStandardMaterial color="#4a5344" />
       </mesh>
       <mesh
         ref={barrelRef}
-        position={[0, 0.06, -l * 0.4]}
+        position={[0, 0.05, -1.3]}
         rotation={[Math.PI / 2, 0, 0]}
         castShadow
       >
-        <cylinderGeometry args={[0.09, 0.12, l * 0.55, 10]} />
-        <meshStandardMaterial color={gunColor} metalness={0.45} roughness={0.5} />
+        <cylinderGeometry args={[0.1, 0.14, 1.6, 12]} />
+        <meshStandardMaterial color={gun} roughness={0.45} metalness={0.45} />
       </mesh>
-      <object3D ref={muzzleRef} position={[0, 0.06, -l * 0.68]} />
+      <object3D ref={muzzleRef} position={[0, 0.05, -2.15]} />
     </group>
   );
-}
-
-export function useTrackTexture() {
-  return useMemo(() => makeTrackTexture(), []);
 }
