@@ -392,7 +392,6 @@ function EnemyTank({ spawn, onGone }: { spawn: EnemySpawn; onGone: () => void })
       />
       <WeaponMount
         weapon={weapon}
-        chassis={chassis}
         turretRef={turretRef}
         barrelRef={barrelRef}
         muzzleRef={muzzleRef}
